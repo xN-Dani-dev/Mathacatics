@@ -35,14 +35,15 @@ function Onboarding() {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState<string>("🐱");
   const [system, setSystem] = useState<Profile["system"] | null>(null);
+  const [year, setYear] = useState<string | null>(null);
   const [level, setLevel] = useState<Profile["mathLevel"] | null>(null);
 
-  const bubbles = ["Meow! I'm Whiskers. What should I call you?", "Which school system are you in?", "What level of maths do you take?"];
-  const valid = [name.trim().length > 0 && name.trim().length <= 30, !!system, !!level][step];
+  const bubbles = ["Meow! I'm Whiskers. What should I call you?", "Which school system are you in?", "Which year are you in?", "What level of maths do you take?"];
+  const valid = [name.trim().length > 0 && name.trim().length <= 30, !!system, !!year, !!level][step];
 
   const next = () => {
-    if (step < 2) return setStep(step + 1);
-    saveProfile({ name: name.trim(), avatar, system: system!, mathLevel: level! });
+    if (step < 3) return setStep(step + 1);
+    saveProfile({ name: name.trim(), avatar, system: system!, year: year!, mathLevel: level! });
     nav({ to: "/" });
   };
 
@@ -54,7 +55,7 @@ function Onboarding() {
       <div className="flex items-center gap-4">
         <button onClick={() => (step ? setStep(step - 1) : null)} className="text-muted-foreground" aria-label="Back"><X /></button>
         <div className="h-4 flex-1 rounded-full bg-muted">
-          <div className="h-4 rounded-full bg-accent transition-all" style={{ width: `${((step + 1) / 3) * 100}%` }} />
+          <div className="h-4 rounded-full bg-accent transition-all" style={{ width: `${((step + 1) / 4) * 100}%` }} />
         </div>
       </div>
 
@@ -84,7 +85,14 @@ function Onboarding() {
             <span className="text-3xl">{s.emoji}</span>{s.label}
           </button>
         ))}
-        {step === 2 && levels.map((l) => (
+        {step === 2 && (
+          <div className="grid grid-cols-4 gap-3">
+            {["S1","S2","S3","S4","S5","S6","S7"].map((y) => (
+              <button key={y} onClick={() => setYear(y)} className={option(year === y) + " justify-center text-xl"}>{y}</button>
+            ))}
+          </div>
+        )}
+        {step === 3 && levels.map((l) => (
           <button key={l.id} onClick={() => setLevel(l.id)} className={option(level === l.id)}>
             <span className="text-3xl">{l.emoji}</span>
             <span>{l.id}<span className="block text-sm font-bold text-muted-foreground">{l.desc}</span></span>
@@ -96,7 +104,7 @@ function Onboarding() {
         disabled={!valid} onClick={next}
         className="btn-3d mt-6 w-full rounded-2xl border-accent-shadow bg-accent p-4 text-lg font-extrabold uppercase text-accent-foreground disabled:border-border disabled:bg-muted disabled:text-muted-foreground"
       >
-        {step < 2 ? "Continue" : "Start learning"}
+        {step < 3 ? "Continue" : "Start learning"}
       </button>
     </div>
   );
