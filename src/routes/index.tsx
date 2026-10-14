@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { loadProfile, type Profile } from "@/lib/profile";
 import { Flame, Gem, Heart, Home, Trophy, User, BookOpen, Star, Lock, Check } from "lucide-react";
 import cat from "@/assets/cat.png";
 
@@ -23,6 +25,10 @@ const units = [
 const offsets = [0, 60, 90, 60, 0, -60, -90, -60];
 
 function Index() {
+  const nav = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  useEffect(() => { const p = loadProfile(); if (!p) nav({ to: "/onboarding" }); else setProfile(p); }, [nav]);
+  if (!profile) return null;
   return (
     <div className="flex min-h-screen font-sans">
       <aside className="hidden w-60 flex-col gap-2 border-r-2 p-4 md:flex">
@@ -75,7 +81,7 @@ function Index() {
           </div>
           <div className="flex items-center gap-3 rounded-2xl border-2 p-5">
             <img src={cat} alt="" className="h-16 w-16" />
-            <p className="text-sm font-bold text-muted-foreground">Meow! Pick your school system to get a tailored path.</p>
+            <p className="text-sm font-bold text-muted-foreground">Meow, {profile.name} {profile.avatar}! Your path: {profile.system === "EB" ? "European Baccalaureate" : "International Baccalaureate"} · {profile.mathLevel} maths.</p>
           </div>
         </aside>
       </main>
