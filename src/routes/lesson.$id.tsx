@@ -38,7 +38,7 @@ function LessonPage() {
       </div>
     );
 
-  const step = lesson.steps[i];
+  const step = lesson.steps[Math.min(i, lesson.steps.length - 1)]!;
   const total = lesson.steps.filter((s) => s.type === "mcq").length;
 
   if (finished || hearts === 0) {
