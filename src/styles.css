@@ -19,6 +19,11 @@
  */
 
 @theme inline {
+  --font-sans: "Nunito", sans-serif;
+  --color-primary-shadow: var(--primary-shadow);
+  --color-accent-shadow: var(--accent-shadow);
+  --color-sky: var(--sky);
+  --color-gold: var(--gold);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -62,21 +67,25 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --primary-shadow: oklch(0.58 0.16 50);
+  --accent-shadow: oklch(0.58 0.17 145);
+  --sky: oklch(0.7 0.14 235);
+  --gold: oklch(0.83 0.16 85);
+  --radius: 1rem;
+  --background: oklch(0.99 0.005 80);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.72 0.17 55);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
   --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --accent: oklch(0.75 0.19 145);
+  --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.929 0.013 255.508);
@@ -141,4 +150,10 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+@utility btn-3d {
+  border-bottom-width: 4px;
+  transition: transform .1s;
+  &:active { transform: translateY(3px); border-bottom-width: 1px; }
 }
