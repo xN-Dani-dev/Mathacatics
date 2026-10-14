@@ -18,17 +18,17 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const units = [
-  { title: "Unit 1 · Algebra Basics", color: "bg-accent border-accent-shadow", lessons: ["done", "done", "current", "locked", "locked"] },
-  { title: "Unit 2 · Cell Biology", color: "bg-sky border-sky", lessons: ["locked", "locked", "locked", "locked"] },
-];
+const colors = ["bg-accent border-accent-shadow", "bg-sky border-sky", "bg-primary border-primary-shadow", "bg-gold border-gold"];
 const offsets = [0, 60, 90, 60, 0, -60, -90, -60];
 
 function Index() {
   const nav = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  useEffect(() => { const p = loadProfile(); if (!p || !p.year) nav({ to: "/onboarding" }); else setProfile(p); }, [nav]);
+  const [done, setDone] = useState<string[]>([]);
+  useEffect(() => { const p = loadProfile(); if (!p || !p.year) nav({ to: "/onboarding" }); else { setProfile(p); setDone(loadDone()); } }, [nav]);
   if (!profile) return null;
+  const units = curriculum[profile.year] ?? [];
+  const currentId = units.flatMap((u) => u.lessons).find((l) => l.steps.length && !done.includes(l.id))?.id;
   return (
     <div className="flex min-h-screen font-sans">
       <aside className="hidden w-60 flex-col gap-2 border-r-2 p-4 md:flex">
@@ -49,24 +49,34 @@ function Index() {
             <span className="text-2xl font-black text-primary">whiskers</span>
             <Stats />
           </div>
+          {!units.length && (
+            <div className="rounded-2xl border-2 p-6 text-center font-bold text-muted-foreground">
+              <img src={cat} alt="" className="mx-auto h-24 w-24" />
+              Lessons for {profile.year} are coming soon. Meow!
+            </div>
+          )}
           {units.map((u, ui) => (
             <section key={u.title} className="mb-12">
-              <div className={`btn-3d mb-10 rounded-2xl p-4 text-accent-foreground ${u.color}`}>
-                <p className="text-xs font-bold uppercase opacity-80">Section {ui + 1}</p>
+              <div className={`btn-3d mb-10 rounded-2xl p-4 text-accent-foreground ${colors[ui % colors.length]}`}>
+                <p className="text-xs font-bold uppercase opacity-80">{profile.year} · Unit {ui + 1}</p>
                 <h2 className="text-xl font-extrabold">{u.title}</h2>
               </div>
-              <div className="relative flex flex-col items-center gap-6">
-                {u.lessons.map((s, i) => (
-                  <div key={i} style={{ transform: `translateX(${offsets[i % 8]}px)` }} className="relative">
-                    {s === "current" && (
-                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce rounded-xl border-2 bg-card px-3 py-1 text-sm font-extrabold text-primary">START</div>
-                    )}
-                    <button className={`btn-3d flex h-[70px] w-[70px] items-center justify-center rounded-full ${s === "locked" ? "border-border bg-muted text-muted-foreground" : "border-primary-shadow bg-primary text-primary-foreground"}`}>
-                      {s === "done" ? <Check className="h-8 w-8" strokeWidth={4} /> : s === "locked" ? <Lock className="h-7 w-7" /> : <Star className="h-8 w-8 fill-current" />}
-                    </button>
-                    {s === "current" && ui === 0 && <img src={cat} alt="Whiskers the cat" className="absolute left-28 top-0 h-32 w-32 max-w-none" />}
-                  </div>
-                ))}
+              <div className="relative flex flex-col items-center gap-8">
+                {u.lessons.map((l, i) => {
+                  const s = done.includes(l.id) ? "done" : !l.steps.length ? "locked" : l.id === currentId ? "current" : "open";
+                  return (
+                    <div key={l.id} style={{ transform: `translateX(${offsets[i % 8]}px)` }} className="relative flex flex-col items-center">
+                      {s === "current" && (
+                        <div className="absolute -top-10 animate-bounce whitespace-nowrap rounded-xl border-2 bg-card px-3 py-1 text-sm font-extrabold text-primary">START</div>
+                      )}
+                      <Link to="/lesson/$id" params={{ id: l.id }} className={`btn-3d flex h-[70px] w-[70px] items-center justify-center rounded-full ${s === "locked" ? "border-border bg-muted text-muted-foreground" : s === "done" ? "border-gold bg-gold text-primary-foreground" : "border-primary-shadow bg-primary text-primary-foreground"}`}>
+                        {s === "done" ? <Check className="h-8 w-8" strokeWidth={4} /> : s === "locked" ? <Lock className="h-7 w-7" /> : <Star className="h-8 w-8 fill-current" />}
+                      </Link>
+                      <span className="mt-2 max-w-36 text-center text-xs font-extrabold text-muted-foreground">{l.title}</span>
+                      {s === "current" && <img src={cat} alt="Whiskers the cat" className="absolute left-28 top-0 h-28 w-28 max-w-none" />}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           ))}
