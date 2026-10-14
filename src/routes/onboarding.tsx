@@ -33,7 +33,7 @@ function Onboarding() {
   const nav = useNavigate();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
-  const [avatar, setAvatar] = useState(avatars[0]);
+  const [avatar, setAvatar] = useState<string>("🐱");
   const [system, setSystem] = useState<Profile["system"] | null>(null);
   const [level, setLevel] = useState<Profile["mathLevel"] | null>(null);
 
