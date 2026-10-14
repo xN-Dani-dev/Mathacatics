@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { curriculum, loadDone } from "@/lib/curriculum";
 import { useEffect, useState } from "react";
 import { loadProfile, type Profile } from "@/lib/profile";
 import { Flame, Gem, Heart, Home, Trophy, User, BookOpen, Star, Lock, Check } from "lucide-react";
