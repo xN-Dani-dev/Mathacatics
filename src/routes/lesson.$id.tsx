@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { X, Heart } from "lucide-react";
+import { X } from "lucide-react";
 import cat from "@/assets/cat.png";
 import { findLesson, markDone } from "@/lib/curriculum";
+import { useDailyFish } from "@/lib/fish";
+import { VisualDiagram } from "@/components/VisualDiagram";
 
 export const Route = createFileRoute("/lesson/$id")({
   head: () => ({
@@ -18,16 +20,25 @@ export const Route = createFileRoute("/lesson/$id")({
   component: LessonPage,
 });
 
+function FishCounter({ count }: { count: number }) {
+  return (
+    <span className="flex items-center gap-1 font-extrabold text-sky" aria-label={`${count} fish left today`}>
+      <span className="text-xl">🐟</span>{count}
+    </span>
+  );
+}
+
 function LessonPage() {
   const { id } = Route.useParams();
   const nav = useNavigate();
   const lesson = findLesson(id);
+  const { fish, ready, eat } = useDailyFish();
   const [i, setI] = useState(0);
   const [pick, setPick] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const [hearts, setHearts] = useState(5);
   const [correct, setCorrect] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [snack, setSnack] = useState(0); // increments each time the cat eats a fish
 
   if (!lesson || !lesson.steps.length)
     return (
@@ -41,16 +52,27 @@ function LessonPage() {
   const step = lesson.steps[Math.min(i, lesson.steps.length - 1)]!;
   const total = lesson.steps.filter((s) => s.type === "mcq").length;
 
-  if (finished || hearts === 0) {
-    const won = hearts > 0;
-    if (won) markDone(lesson.id);
+  if (ready && fish === 0 && !finished) {
     return (
       <div className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-6 p-6 text-center font-sans">
         <img src={cat} alt="Whiskers" className="h-44 w-44" />
-        <h1 className="text-3xl font-black text-primary">{won ? "Lesson complete!" : "Out of hearts!"}</h1>
+        <h1 className="text-3xl font-black text-primary">Whiskers ate all your fish!</h1>
+        <p className="text-lg font-bold text-muted-foreground">You get 10 fresh fish every day. Come back tomorrow for more, or review your acquired knowledge on the home page.</p>
+        <button onClick={() => nav({ to: "/" })} className="btn-3d w-full rounded-2xl border-primary-shadow bg-primary p-4 text-lg font-extrabold uppercase text-primary-foreground">Back home</button>
+      </div>
+    );
+  }
+
+  if (finished) {
+    markDone(lesson.id);
+    return (
+      <div className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-6 p-6 text-center font-sans">
+        <img src={cat} alt="Whiskers" className="h-44 w-44" />
+        <h1 className="text-3xl font-black text-primary">Lesson complete!</h1>
         <div className="flex gap-4">
-          <div className="rounded-2xl border-2 border-gold p-4 font-extrabold"><p className="text-xs uppercase text-gold">XP</p>{won ? correct * 5 + 10 : 0}</div>
+          <div className="rounded-2xl border-2 border-gold p-4 font-extrabold"><p className="text-xs uppercase text-gold">XP</p>{correct * 5 + 10}</div>
           <div className="rounded-2xl border-2 border-accent p-4 font-extrabold"><p className="text-xs uppercase text-accent">Score</p>{correct}/{total}</div>
+          <div className="rounded-2xl border-2 border-sky p-4 font-extrabold"><p className="text-xs uppercase text-sky">Fish left</p>🐟 {fish}</div>
         </div>
         <button onClick={() => nav({ to: "/" })} className="btn-3d w-full rounded-2xl border-accent-shadow bg-accent p-4 text-lg font-extrabold uppercase text-accent-foreground">Continue</button>
       </div>
@@ -65,7 +87,8 @@ function LessonPage() {
   const onMain = () => {
     if (step.type === "learn" || checked) return advance();
     setChecked(true);
-    if (isRight) setCorrect(correct + 1); else setHearts(hearts - 1);
+    if (isRight) setCorrect(correct + 1);
+    else { eat(); setSnack(snack + 1); }
   };
 
   return (
@@ -75,7 +98,7 @@ function LessonPage() {
         <div className="h-4 flex-1 rounded-full bg-muted">
           <div className="h-4 rounded-full bg-accent transition-all" style={{ width: `${(i / lesson.steps.length) * 100}%` }} />
         </div>
-        <span className="flex items-center gap-1 font-extrabold text-destructive"><Heart className="fill-current" />{hearts}</span>
+        <FishCounter count={fish} />
       </div>
 
       <div className="mt-8 flex-1">
@@ -88,6 +111,7 @@ function LessonPage() {
             <div className="mt-4 space-y-3 rounded-2xl border-2 p-5">
               {step.body.map((b) => <p key={b} className="text-lg font-semibold">{b}</p>)}
             </div>
+            {step.visual && <div className="mt-4"><VisualDiagram visual={step.visual} /></div>}
           </>
         ) : (
           <>
@@ -108,8 +132,18 @@ function LessonPage() {
       <div className={`-mx-5 mt-6 rounded-t-2xl p-5 ${checked ? (isRight ? "bg-accent/15" : "bg-destructive/15") : ""}`}>
         {checked && step.type === "mcq" && (
           <div className="mb-4">
-            <p className={`text-xl font-black ${isRight ? "text-accent" : "text-destructive"}`}>{isRight ? "Purr-fect! 🎉" : "Not quite…"}</p>
-            <p className="font-semibold">{step.explain}</p>
+            {isRight ? (
+              <p className="text-xl font-black text-accent">Purr-fect! 🎉</p>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="relative h-14 w-14 shrink-0">
+                  <img src={cat} alt="" className="h-14 w-14" />
+                  <span key={snack} className="fish-snack absolute -right-3 top-0 text-2xl">🐟</span>
+                </div>
+                <p className="text-xl font-black text-destructive">Whiskers ate a fish!</p>
+              </div>
+            )}
+            <p className="mt-1 font-semibold">{step.explain}</p>
           </div>
         )}
         <button
