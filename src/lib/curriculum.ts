@@ -43,6 +43,9 @@ const S3: Unit[] = [
   unit("s3", "Geometry", ["Angles & parallel lines", "Transformations"]),
   unit("s3", "Statistics", ["Statistics & probability"]),
 ];
+// Sequential ids across units so every lesson id is unique.
+S2.flatMap((u) => u.lessons).forEach((l, i) => (l.id = `s2-${i + 1}`));
+S3.flatMap((u) => u.lessons).forEach((l, i) => (l.id = `s3-${i + 1}`));
 
 export const curriculum: Record<string, Unit[]> = { S1, S2, S3 };
 export const findLesson = (id: string) =>
