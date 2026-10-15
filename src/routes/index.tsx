@@ -2,7 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { curriculum, loadDone } from "@/lib/curriculum";
 import { useEffect, useState } from "react";
 import { loadProfile, type Profile } from "@/lib/profile";
-import { Flame, Gem, Heart, Home, Trophy, User, BookOpen, Star, Lock, Check } from "lucide-react";
+import { useDailyFish } from "@/lib/fish";
+import { teaching } from "@/lib/lesson-content";
+import { VisualDiagram } from "@/components/VisualDiagram";
+import { Flame, Gem, Home, Trophy, User, BookOpen, Star, Lock, Check, Lightbulb } from "lucide-react";
 import cat from "@/assets/cat.png";
 
 export const Route = createFileRoute("/")({
@@ -19,7 +22,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const colors = ["bg-accent border-accent-shadow", "bg-sky border-sky", "bg-primary border-primary-shadow", "bg-gold border-gold"];
+// Unit banner colours: blue, sky, orange, blue (Geometry is blue, no gold).
+const colors = ["bg-primary border-primary-shadow", "bg-sky border-sky", "bg-orange border-orange", "bg-primary border-primary-shadow"];
 const offsets = [0, 60, 90, 60, 0, -60, -90, -60];
 
 function Index() {
@@ -58,7 +62,7 @@ function Index() {
           )}
           {units.map((u, ui) => (
             <section key={u.title} className="mb-12">
-              <div className={`btn-3d mb-10 rounded-2xl p-4 text-accent-foreground ${colors[ui % colors.length]}`}>
+              <div className={`btn-3d mb-10 rounded-2xl p-4 text-primary-foreground ${colors[ui % colors.length]}`}>
                 <p className="text-xs font-bold uppercase opacity-80">{profile.year} · Unit {ui + 1}</p>
                 <h2 className="text-xl font-extrabold">{u.title}</h2>
               </div>
@@ -81,6 +85,8 @@ function Index() {
               </div>
             </section>
           ))}
+
+          <AcquiredKnowledge units={units} />
         </div>
 
         <aside className="hidden w-80 flex-col gap-6 lg:flex">
@@ -104,12 +110,58 @@ function Index() {
   );
 }
 
+function AcquiredKnowledge({ units }: { units: { title: string; lessons: { id: string; title: string }[] }[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  if (!units.length) return null;
+  return (
+    <section className="mb-24">
+      <div className="mb-6 flex items-center gap-3">
+        <Lightbulb className="h-7 w-7 text-gold" />
+        <h2 className="text-2xl font-black">Acquired knowledge</h2>
+      </div>
+      <p className="mb-6 text-sm font-bold text-muted-foreground">All the formulas and explanations from your lessons, with diagrams. Tap a lesson to review it.</p>
+      {units.map((u) => (
+        <div key={u.title} className="mb-6">
+          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-sky">{u.title}</h3>
+          <div className="space-y-2">
+            {u.lessons.map((l) => {
+              const cards = teaching[l.title] ?? [];
+              if (!cards.length) return null;
+              const isOpen = open === l.id;
+              return (
+                <div key={l.id} className="rounded-2xl border-2">
+                  <button onClick={() => setOpen(isOpen ? null : l.id)} className="flex w-full items-center justify-between p-4 text-left font-extrabold">
+                    {l.title}
+                    <span className="text-muted-foreground">{isOpen ? "−" : "+"}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="space-y-4 border-t-2 p-4">
+                      {cards.map((c, ci) => (
+                        <div key={ci}>
+                          <p className="mb-2 font-extrabold text-primary">{c.title}</p>
+                          {c.body.map((b) => <p key={b} className="mb-1 text-sm font-semibold">{b}</p>)}
+                          <div className="mt-2"><VisualDiagram visual={c.visual} /></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function Stats() {
+  const { fish } = useDailyFish();
   return (
     <div className="flex items-center gap-5 font-extrabold">
       <span className="flex items-center gap-1 text-primary"><Flame className="fill-current" />3</span>
       <span className="flex items-center gap-1 text-sky"><Gem className="fill-current" />500</span>
-      <span className="flex items-center gap-1 text-destructive"><Heart className="fill-current" />5</span>
+      <span className="flex items-center gap-1 text-sky" aria-label={`${fish} fish left today`}><span className="text-xl">🐟</span>{fish}</span>
     </div>
   );
 }
